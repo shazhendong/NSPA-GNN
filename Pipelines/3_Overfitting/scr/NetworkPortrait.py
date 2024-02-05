@@ -222,9 +222,27 @@ def MakeSubjectNetDataset(d_m, l_m, d_n, l_n, e):
     pool.close()
     #data_pnFeatures = [subjectNet(d_m, l_m, subject, e) for subject in d_n]
     return data_pnFeatures
+
+def MakeSubjectNetDatasetEdges(d_m, l_m, d_n, l_n, e):
+    #This function generats subject network dataset using edges as features.
+    #Features:
+    #   d_m: modeling data 2 d list
+    #   l_m: labels of modeling data
+    #   d_n: data to generate networks 2 d list
+    #   l_n: labels of network data
+    #   e: selected edges
+    
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    data_pnFeatures = pool.map(subjectNet_parallel_Edges, [(d_m, l_m, subject, e) for subject in d_n])
+    pool.close()
+    #data_pnFeatures = [subjectNet(d_m, l_m, subject, e) for subject in d_n]
+    return data_pnFeatures
     
 def subjectNet_parallel(p):
     return subjectNet(p[0], p[1], p[2], p[3])
+
+def subjectNet_parallel_Edges(p):
+    return subjectNetEdges(p[0], p[1], p[2], p[3])
 
 def subjectNet(d_m, l_m, arr_feature, e):
     #This function generats subject network dataset using delta degree as features.
@@ -251,6 +269,25 @@ def subjectNet(d_m, l_m, arr_feature, e):
             pn_features[f1] = pn_features[f1] - 1
             pn_features[f2] = pn_features[f2] - 1
     return pn_features
+
+def subjectNetEdges(d_m, l_m, arr_feature, e):
+    #This function generats subject network dataset using edges as features.
+    #Features:
+    #   d_m: modeling data 2 d list
+    #   l_m: labels of modeling data
+    #   arr_feature: data to generate networks 2 d list
+    #   e: selected edges
+    #Returns:
+    #   subjectNet edge weight array
+    
+    # edge weight (str) arr
+    arr_edgeweight = [''] * len(e)
+    for p in e:
+        f1 = p[0] # feature index one
+        f2 = p[1] # feature index two
+        edgeweight = subjectNetEdgeWeight(d_m, f1, arr_feature[f1], f2, arr_feature[f2], l_m)
+        arr_edgeweight[e.index(p)] = edgeweight
+    return arr_edgeweight
     
 def deltaDegree(d, f1, f1_value, f2, f2_value, l):
     #This function generats pair-wise modes for feature f1 and f2
@@ -299,3 +336,50 @@ def deltaDegree(d, f1, f1_value, f2, f2_value, l):
     else:
         return 1 # positive
     
+def subjectNetEdgeWeight(d, f1, f1_value, f2, f2_value, l):
+    #This function generats pair-wise modes for feature f1 and f2
+    #Features:
+    #   d: data 2 d list
+    #   f1: feature1 index
+    #   f1_value: value of feature1
+    #   f2: feature1 index
+    #   f2_value: value of feature2
+    #   l: vector of labels
+    #Return:
+    #   return (balanced number of control + number of case)
+
+    v1 =  getFeatureValueVector(d, f1) # value vector for f1
+    v2 =  getFeatureValueVector(d, f2)# value vector for f2
+
+    app_round_balancing = 4 # rounding parameter
+
+    s = ""
+
+    f1_values = list(Counter(v1).keys())
+    f2_values = list(Counter(v2).keys())
+
+    df = pd.DataFrame({'f1': v1, 'f2': v2, 'labels': l})
+    
+    gb = df.groupby(['f1','f2','labels'])
+    gb_size = gb.size()
+
+    # get ratio
+    ratio = (l==1).sum()/(l==0).sum()
+    numOfControl = 0
+    numOfCase = 0
+    #print(gb_size)
+    #print(f1_value, f2_value)
+    if (f1_value, f2_value, 0) in gb_size.index:
+        #print('enter')
+        numOfControl = gb_size[(f1_value, f2_value, 0)]
+    if (f1_value, f2_value, 1) in gb_size.index:
+        #print('enter')
+        numOfCase = gb_size[(f1_value, f2_value, 1)]
+
+    numOfControl = numOfControl*ratio
+    # preserve 2 decimal places
+    numOfControl = "{:.2f}".format(numOfControl)
+
+    # return "('numOfControl'+'numOfCase')"
+    return '(' + str(numOfControl) + '+' + str(numOfCase) + ')'
+
