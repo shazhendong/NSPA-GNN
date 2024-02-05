@@ -9,9 +9,9 @@ seed=25 # random seed
 add_input=../res/igCutoff_"$cutoff"_minCompSize_"$cutoff_comp"/datasets
 add_input_net=../res/igCutoff_"$cutoff"_minCompSize_"$cutoff_comp"/network
 add_output=../res/igCutoff_"$cutoff"_minCompSize_"$cutoff_comp"/datasets_subjNet
-add_output_ori=../res/igCutoff_"$cutoff"_minCompSize_"$cutoff_comp"/datasets_ori_subjNet
+#add_output_ori=../res/igCutoff_"$cutoff"_minCompSize_"$cutoff_comp"/datasets_ori_subjNet
 mkdir $add_output
-mkdir $add_output_ori
+#mkdir $add_output_ori
 
 #### Split the dataset ####
 
@@ -60,3 +60,5 @@ rm header.csv
 rm edge_list_index.csv
 #rm LC*.nodelist
 rm Allnodes.testing.csv.noheader.tsv
+rm test_fold_*.tsv
+rm train_fold_*.tsv
