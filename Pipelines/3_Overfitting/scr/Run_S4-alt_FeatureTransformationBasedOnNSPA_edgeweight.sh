@@ -1,8 +1,8 @@
 # This sh file generate subject networks.
 
 #### Parameters ####
-cutoff=0.0272 # information gain cutoff
-cutoff_comp=20 # the minimun size of network components
+cutoff=0.0262 # information gain cutoff
+cutoff_comp=40 # the minimun size of network components
 num_folds=5 # number of folds for cross validation
 seed=25 # random seed
 
@@ -62,3 +62,4 @@ rm edge_list_index.csv
 rm Allnodes.testing.csv.noheader.tsv
 rm test_fold_*.tsv
 rm train_fold_*.tsv
+rm Alledges.edgelist
